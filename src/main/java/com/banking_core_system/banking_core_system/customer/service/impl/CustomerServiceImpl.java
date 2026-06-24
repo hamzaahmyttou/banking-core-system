@@ -5,6 +5,8 @@ import com.banking_core_system.banking_core_system.customer.dto.CustomerResponse
 import com.banking_core_system.banking_core_system.customer.entity.Customer;
 import com.banking_core_system.banking_core_system.customer.repository.CustomerRepository;
 import com.banking_core_system.banking_core_system.customer.service.CustomerService;
+import com.banking_core_system.banking_core_system.exception.CustomerAlreadyExistsException;
+import com.banking_core_system.banking_core_system.exception.CustomerNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,7 +22,9 @@ public class CustomerServiceImpl implements CustomerService {
     public CustomerResponse createCustomer(CustomerRequest request) {
 
         if (customerRepository.existsByCin(request.getCin())) {
-            throw new RuntimeException("Customer already exists");
+            throw new CustomerAlreadyExistsException(
+                    "Customer with CIN " + request.getCin() + " already exists"
+            );
         }
 
         Customer customer = Customer.builder()
@@ -40,7 +44,8 @@ public class CustomerServiceImpl implements CustomerService {
     public CustomerResponse getCustomerById(Long id) {
 
         Customer customer = customerRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Customer not found"));
+                .orElseThrow(() -> new CustomerNotFoundException(
+                "Customer with id " + id + " not found"));
 
         return mapToResponse(customer);
     }
@@ -58,7 +63,8 @@ public class CustomerServiceImpl implements CustomerService {
     public CustomerResponse updateCustomer(Long id, CustomerRequest request) {
 
         Customer customer = customerRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Customer not found"));
+                .orElseThrow(() -> new CustomerNotFoundException(
+                "Customer with id " + id + " not found"));
 
         customer.setFirstName(request.getFirstName());
         customer.setLastName(request.getLastName());
@@ -74,7 +80,8 @@ public class CustomerServiceImpl implements CustomerService {
     public void deleteCustomer(Long id) {
 
         Customer customer = customerRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Customer not found"));
+                .orElseThrow(() -> new CustomerNotFoundException(
+                "Customer with id " + id + " not found"));
 
         customerRepository.delete(customer);
     }
