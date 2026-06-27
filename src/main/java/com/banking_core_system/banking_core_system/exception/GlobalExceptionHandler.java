@@ -83,4 +83,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(response);
     }
+
+    @ExceptionHandler(AccountNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleAccountNotFound(
+            AccountNotFoundException ex) {
+
+        ErrorResponse response = ErrorResponse.builder()
+                .status(HttpStatus.NOT_FOUND.value())
+                .error(HttpStatus.NOT_FOUND.getReasonPhrase())
+                .message(ex.getMessage())
+                .timestamp(LocalDateTime.now())
+                .details(List.of())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(response);
+    }
 }
