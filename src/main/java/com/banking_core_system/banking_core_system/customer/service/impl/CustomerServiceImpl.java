@@ -3,6 +3,7 @@ package com.banking_core_system.banking_core_system.customer.service.impl;
 import com.banking_core_system.banking_core_system.customer.dto.CustomerRequest;
 import com.banking_core_system.banking_core_system.customer.dto.CustomerResponse;
 import com.banking_core_system.banking_core_system.customer.entity.Customer;
+import com.banking_core_system.banking_core_system.customer.mapper.CustomerMapper;
 import com.banking_core_system.banking_core_system.customer.repository.CustomerRepository;
 import com.banking_core_system.banking_core_system.customer.service.CustomerService;
 import com.banking_core_system.banking_core_system.exception.CustomerAlreadyExistsException;
@@ -17,6 +18,8 @@ import java.util.List;
 public class CustomerServiceImpl implements CustomerService {
 
     private final CustomerRepository customerRepository;
+
+    private final CustomerMapper customerMapper;
 
     @Override
     public CustomerResponse createCustomer(CustomerRequest request) {
@@ -37,7 +40,7 @@ public class CustomerServiceImpl implements CustomerService {
 
         Customer savedCustomer = customerRepository.save(customer);
 
-        return mapToResponse(savedCustomer);
+        return customerMapper.toResponse(savedCustomer);
     }
 
     @Override
@@ -47,7 +50,7 @@ public class CustomerServiceImpl implements CustomerService {
                 .orElseThrow(() -> new CustomerNotFoundException(
                 "Customer with id " + id + " not found"));
 
-        return mapToResponse(customer);
+        return customerMapper.toResponse(customer);
     }
 
     @Override
@@ -55,7 +58,7 @@ public class CustomerServiceImpl implements CustomerService {
 
         return customerRepository.findAll()
                 .stream()
-                .map(this::mapToResponse)
+                .map(customerMapper::toResponse)
                 .toList();
     }
 
@@ -73,7 +76,7 @@ public class CustomerServiceImpl implements CustomerService {
 
         Customer updatedCustomer = customerRepository.save(customer);
 
-        return mapToResponse(updatedCustomer);
+        return customerMapper.toResponse(updatedCustomer);
     }
 
     @Override
@@ -84,19 +87,5 @@ public class CustomerServiceImpl implements CustomerService {
                 "Customer with id " + id + " not found"));
 
         customerRepository.delete(customer);
-    }
-
-    private CustomerResponse mapToResponse(Customer customer) {
-
-        return CustomerResponse.builder()
-                .id(customer.getId())
-                .firstName(customer.getFirstName())
-                .lastName(customer.getLastName())
-                .cin(customer.getCin())
-                .email(customer.getEmail())
-                .phoneNumber(customer.getPhoneNumber())
-                .status(customer.getStatus())
-                .createdAt(customer.getCreatedAt())
-                .build();
     }
 }

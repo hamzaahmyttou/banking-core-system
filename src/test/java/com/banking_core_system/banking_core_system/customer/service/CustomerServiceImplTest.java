@@ -4,6 +4,7 @@ import com.banking_core_system.banking_core_system.customer.dto.CustomerRequest;
 import com.banking_core_system.banking_core_system.customer.dto.CustomerResponse;
 import com.banking_core_system.banking_core_system.customer.entity.Customer;
 import com.banking_core_system.banking_core_system.customer.entity.CustomerStatus;
+import com.banking_core_system.banking_core_system.customer.mapper.CustomerMapper;
 import com.banking_core_system.banking_core_system.customer.repository.CustomerRepository;
 import com.banking_core_system.banking_core_system.customer.service.impl.CustomerServiceImpl;
 import com.banking_core_system.banking_core_system.exception.CustomerAlreadyExistsException;
@@ -15,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -29,6 +31,9 @@ class CustomerServiceImplTest {
     @InjectMocks
     private CustomerServiceImpl customerService;
 
+    @Mock
+    private CustomerMapper customerMapper;
+
     @Test
     void shouldCreateCustomerSuccessfully() {
 
@@ -42,13 +47,24 @@ class CustomerServiceImplTest {
 
         Customer customer = Customer.builder()
                 .id(1L)
-                .firstName(request.getFirstName())
-                .lastName(request.getLastName())
-                .cin(request.getCin())
-                .email(request.getEmail())
-                .phoneNumber(request.getPhoneNumber())
+                .firstName("Ahmed")
+                .lastName("Alaoui")
+                .cin("AB123456")
+                .email("ahmed@gmail.com")
+                .phoneNumber("+212612345678")
                 .status(CustomerStatus.ACTIVE)
                 .createdAt(LocalDateTime.now())
+                .build();
+
+        CustomerResponse response = CustomerResponse.builder()
+                .id(1L)
+                .firstName("Ahmed")
+                .lastName("Alaoui")
+                .cin("AB123456")
+                .email("ahmed@gmail.com")
+                .phoneNumber("+212612345678")
+                .status(CustomerStatus.ACTIVE)
+                .createdAt(customer.getCreatedAt())
                 .build();
 
         when(customerRepository.existsByCin(request.getCin()))
@@ -57,15 +73,18 @@ class CustomerServiceImplTest {
         when(customerRepository.save(any(Customer.class)))
                 .thenReturn(customer);
 
-        CustomerResponse response =
+        when(customerMapper.toResponse(customer))
+                .thenReturn(response);
+
+        CustomerResponse result =
                 customerService.createCustomer(request);
 
-        assertNotNull(response);
-        assertEquals("Ahmed", response.getFirstName());
-        assertEquals("AB123456", response.getCin());
+        assertNotNull(result);
+        assertEquals(1L, result.getId());
+        assertEquals("Ahmed", result.getFirstName());
 
-        verify(customerRepository, times(1))
-                .save(any(Customer.class));
+        verify(customerRepository).save(any(Customer.class));
+        verify(customerMapper).toResponse(customer);
     }
 
     @Test
@@ -83,8 +102,8 @@ class CustomerServiceImplTest {
                 () -> customerService.createCustomer(request)
         );
 
-        verify(customerRepository, never())
-                .save(any());
+        verify(customerRepository, never()).save(any());
+        verifyNoInteractions(customerMapper);
     }
 
     @Test
@@ -94,20 +113,27 @@ class CustomerServiceImplTest {
                 .id(1L)
                 .firstName("Ahmed")
                 .lastName("Alaoui")
-                .cin("AB123456")
-                .email("ahmed@gmail.com")
-                .status(CustomerStatus.ACTIVE)
-                .createdAt(LocalDateTime.now())
+                .build();
+
+        CustomerResponse response = CustomerResponse.builder()
+                .id(1L)
+                .firstName("Ahmed")
+                .lastName("Alaoui")
                 .build();
 
         when(customerRepository.findById(1L))
                 .thenReturn(Optional.of(customer));
 
-        CustomerResponse response =
+        when(customerMapper.toResponse(customer))
+                .thenReturn(response);
+
+        CustomerResponse result =
                 customerService.getCustomerById(1L);
 
-        assertEquals(1L, response.getId());
-        assertEquals("Ahmed", response.getFirstName());
+        assertEquals(1L, result.getId());
+        assertEquals("Ahmed", result.getFirstName());
+
+        verify(customerMapper).toResponse(customer);
     }
 
     @Test
@@ -120,6 +146,8 @@ class CustomerServiceImplTest {
                 CustomerNotFoundException.class,
                 () -> customerService.getCustomerById(99L)
         );
+
+        verifyNoInteractions(customerMapper);
     }
 
     @Test
@@ -134,7 +162,120 @@ class CustomerServiceImplTest {
 
         customerService.deleteCustomer(1L);
 
-        verify(customerRepository, times(1))
-                .delete(customer);
+        verify(customerRepository).delete(customer);
+    }
+
+    @Test
+    void shouldReturnAllCustomers() {
+
+        Customer customer1 = Customer.builder()
+                .id(1L)
+                .firstName("Ahmed")
+                .lastName("Alaoui")
+                .build();
+
+        Customer customer2 = Customer.builder()
+                .id(2L)
+                .firstName("Sara")
+                .lastName("Bennani")
+                .build();
+
+        CustomerResponse response1 = CustomerResponse.builder()
+                .id(1L)
+                .firstName("Ahmed")
+                .lastName("Alaoui")
+                .build();
+
+        CustomerResponse response2 = CustomerResponse.builder()
+                .id(2L)
+                .firstName("Sara")
+                .lastName("Bennani")
+                .build();
+
+        when(customerRepository.findAll())
+                .thenReturn(List.of(customer1, customer2));
+
+        when(customerMapper.toResponse(customer1))
+                .thenReturn(response1);
+
+        when(customerMapper.toResponse(customer2))
+                .thenReturn(response2);
+
+        List<CustomerResponse> result = customerService.getAllCustomers();
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+
+        assertEquals("Ahmed", result.get(0).getFirstName());
+        assertEquals("Sara", result.get(1).getFirstName());
+
+        verify(customerRepository).findAll();
+        verify(customerMapper).toResponse(customer1);
+        verify(customerMapper).toResponse(customer2);
+    }
+
+    @Test
+    void shouldUpdateCustomerSuccessfully() {
+
+        CustomerRequest request = CustomerRequest.builder()
+                .firstName("Ahmed Updated")
+                .lastName("Alaoui Updated")
+                .cin("AB123456")
+                .email("updated@gmail.com")
+                .phoneNumber("+212600000000")
+                .build();
+
+        Customer customer = Customer.builder()
+                .id(1L)
+                .firstName("Ahmed")
+                .lastName("Alaoui")
+                .cin("AB123456")
+                .email("ahmed@gmail.com")
+                .phoneNumber("+212612345678")
+                .status(CustomerStatus.ACTIVE)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        Customer updatedCustomer = Customer.builder()
+                .id(1L)
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
+                .cin(customer.getCin())
+                .email(request.getEmail())
+                .phoneNumber(request.getPhoneNumber())
+                .status(CustomerStatus.ACTIVE)
+                .createdAt(customer.getCreatedAt())
+                .build();
+
+        CustomerResponse response = CustomerResponse.builder()
+                .id(1L)
+                .firstName("Ahmed Updated")
+                .lastName("Alaoui Updated")
+                .cin("AB123456")
+                .email("updated@gmail.com")
+                .phoneNumber("+212600000000")
+                .status(CustomerStatus.ACTIVE)
+                .createdAt(customer.getCreatedAt())
+                .build();
+
+        when(customerRepository.findById(1L))
+                .thenReturn(Optional.of(customer));
+
+        when(customerRepository.save(any(Customer.class)))
+                .thenReturn(updatedCustomer);
+
+        when(customerMapper.toResponse(updatedCustomer))
+                .thenReturn(response);
+
+        CustomerResponse result =
+                customerService.updateCustomer(1L, request);
+
+        assertNotNull(result);
+        assertEquals("Ahmed Updated", result.getFirstName());
+        assertEquals("updated@gmail.com", result.getEmail());
+
+        verify(customerRepository).findById(1L);
+        verify(customerRepository).save(any(Customer.class));
+        verify(customerMapper).toResponse(updatedCustomer);
     }
 }
