@@ -17,5 +17,5 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     List<Account> findByCustomerId(Long customerId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    Optional<Account> findWithLockByIban(String iban);
+    Optional<Account> findWithLockById(Long id);
 }

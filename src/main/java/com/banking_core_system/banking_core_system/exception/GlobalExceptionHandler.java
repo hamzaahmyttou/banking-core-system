@@ -99,4 +99,19 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(response);
     }
+
+    @ExceptionHandler(InvalidAccountStatusException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidAccountStatus(
+            InvalidAccountStatusException ex) {
+
+        ErrorResponse response = ErrorResponse.builder()
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
+                .message(ex.getMessage())
+                .timestamp(LocalDateTime.now())
+                .details(List.of())
+                .build();
+
+        return ResponseEntity.badRequest().body(response);
+    }
 }

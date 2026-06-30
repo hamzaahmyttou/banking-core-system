@@ -1,7 +1,13 @@
 package com.banking_core_system.banking_core_system.transaction.service.impl;
 
+import com.banking_core_system.banking_core_system.account.entity.Account;
+import com.banking_core_system.banking_core_system.account.entity.AccountStatus;
 import com.banking_core_system.banking_core_system.account.repository.AccountRepository;
+import com.banking_core_system.banking_core_system.exception.AccountNotFoundException;
+import com.banking_core_system.banking_core_system.exception.InvalidAccountStatusException;
 import com.banking_core_system.banking_core_system.transaction.dto.*;
+import com.banking_core_system.banking_core_system.transaction.entity.Transaction;
+import com.banking_core_system.banking_core_system.transaction.entity.TransactionType;
 import com.banking_core_system.banking_core_system.transaction.mapper.TransactionMapper;
 import com.banking_core_system.banking_core_system.transaction.repository.TransactionRepository;
 import com.banking_core_system.banking_core_system.transaction.service.TransactionService;
@@ -22,8 +28,46 @@ public class TransactionServiceImpl implements TransactionService {
 
     private final TransactionMapper transactionMapper;
 
+    private Account getLockedAccount(Long id) {
+
+        return accountRepository.findWithLockById(id)
+                .orElseThrow(() ->
+                        new AccountNotFoundException(
+                                "Account with id " + id + " not found"));
+    }
+
+    private void validateActiveAccount(Account account) {
+
+        if (account.getStatus() != AccountStatus.ACTIVE) {
+            throw new InvalidAccountStatusException(
+                    "Account is not active");
+        }
+    }
+
+    @Override
     public TransactionResponse deposit(DepositRequest request) {
-        return null;
+
+        Account account = getLockedAccount(request.getAccountId());
+
+        validateActiveAccount(account);
+
+        account.setBalance(
+                account.getBalance().add(request.getAmount())
+        );
+
+        Transaction transaction = Transaction.builder()
+                .type(TransactionType.DEPOSIT)
+                .amount(request.getAmount())
+                .destinationAccount(account)
+                .description(request.getDescription())
+                .build();
+
+        accountRepository.save(account);
+
+        Transaction savedTransaction =
+                transactionRepository.save(transaction);
+
+        return transactionMapper.toResponse(savedTransaction);
     }
 
     public TransactionResponse withdraw(WithdrawalRequest request) {
