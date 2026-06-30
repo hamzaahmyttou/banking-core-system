@@ -1,11 +1,13 @@
 package com.banking_core_system.banking_core_system.account.entity;
 
 import com.banking_core_system.banking_core_system.customer.entity.Customer;
+import com.banking_core_system.banking_core_system.transaction.entity.Transaction;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "accounts")
@@ -42,6 +44,12 @@ public class Account {
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @OneToMany(mappedBy = "sourceAccount")
+    private List<Transaction> outgoingTransactions;
+
+    @OneToMany(mappedBy = "destinationAccount")
+    private List<Transaction> incomingTransactions;
 
     @PrePersist
     public void prePersist() {
