@@ -4,6 +4,7 @@ import com.banking_core_system.banking_core_system.account.entity.Account;
 import com.banking_core_system.banking_core_system.account.entity.AccountStatus;
 import com.banking_core_system.banking_core_system.account.repository.AccountRepository;
 import com.banking_core_system.banking_core_system.exception.AccountNotFoundException;
+import com.banking_core_system.banking_core_system.exception.InsufficientFundsException;
 import com.banking_core_system.banking_core_system.exception.InvalidAccountStatusException;
 import com.banking_core_system.banking_core_system.transaction.dto.*;
 import com.banking_core_system.banking_core_system.transaction.entity.Transaction;
@@ -15,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -44,6 +46,14 @@ public class TransactionServiceImpl implements TransactionService {
         }
     }
 
+    private void validateSufficientBalance(Account account, BigDecimal amount) {
+
+        if (account.getBalance().compareTo(amount) < 0) {
+            throw new InsufficientFundsException(
+                    "Insufficient balance");
+        }
+    }
+
     @Override
     public TransactionResponse deposit(DepositRequest request) {
 
@@ -70,8 +80,31 @@ public class TransactionServiceImpl implements TransactionService {
         return transactionMapper.toResponse(savedTransaction);
     }
 
+    @Override
     public TransactionResponse withdraw(WithdrawalRequest request) {
-        return null;
+
+        Account account = getLockedAccount(request.getAccountId());
+
+        validateActiveAccount(account);
+        validateSufficientBalance(account, request.getAmount());
+
+        account.setBalance(
+                account.getBalance().subtract(request.getAmount())
+        );
+
+        Transaction transaction = Transaction.builder()
+                .type(TransactionType.WITHDRAWAL)
+                .amount(request.getAmount())
+                .sourceAccount(account)
+                .description(request.getDescription())
+                .build();
+
+        accountRepository.save(account);
+
+        Transaction savedTransaction =
+                transactionRepository.save(transaction);
+
+        return transactionMapper.toResponse(savedTransaction);
     }
 
     public TransferResponse transfer(TransferRequest request) {
