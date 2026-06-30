@@ -45,6 +45,9 @@ public class Account {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Version
+    private Long version;
+
     @OneToMany(mappedBy = "sourceAccount")
     private List<Transaction> outgoingTransactions;
 
