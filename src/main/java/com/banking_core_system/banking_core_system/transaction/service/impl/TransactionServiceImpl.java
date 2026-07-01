@@ -3,10 +3,7 @@ package com.banking_core_system.banking_core_system.transaction.service.impl;
 import com.banking_core_system.banking_core_system.account.entity.Account;
 import com.banking_core_system.banking_core_system.account.entity.AccountStatus;
 import com.banking_core_system.banking_core_system.account.repository.AccountRepository;
-import com.banking_core_system.banking_core_system.exception.AccountNotFoundException;
-import com.banking_core_system.banking_core_system.exception.InsufficientFundsException;
-import com.banking_core_system.banking_core_system.exception.InvalidAccountStatusException;
-import com.banking_core_system.banking_core_system.exception.SameAccountTransferException;
+import com.banking_core_system.banking_core_system.exception.*;
 import com.banking_core_system.banking_core_system.transaction.dto.*;
 import com.banking_core_system.banking_core_system.transaction.entity.Transaction;
 import com.banking_core_system.banking_core_system.transaction.entity.TransactionType;
@@ -171,8 +168,16 @@ public class TransactionServiceImpl implements TransactionService {
                 .build();
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public TransactionResponse getTransactionById(Long id) {
-        return null;
+
+        Transaction transaction = transactionRepository.findById(id)
+                .orElseThrow(() ->
+                        new TransactionNotFoundException(
+                                "Transaction with id " + id + " not found"));
+
+        return transactionMapper.toResponse(transaction);
     }
 
     public List<TransactionResponse> getAccountHistory(Long accountId) {
