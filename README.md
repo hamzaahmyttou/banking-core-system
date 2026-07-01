@@ -2,7 +2,7 @@
 
 A modern banking backend application built with Java 21 and Spring Boot 3, designed to simulate the core functionalities of a banking information system.
 
-This project follows clean architecture principles and demonstrates enterprise backend development practices, including layered architecture, validation, exception handling, DTO mapping, and automated testing.
+This project follows clean architecture principles and demonstrates banking business rules, transaction management, concurrency handling, testing, and REST API best practices.
 
 ---
 
@@ -27,6 +27,28 @@ This project follows clean architecture principles and demonstrates enterprise b
 * Retrieve all accounts of a customer
 * Check account balance
 * Close account
+
+### Transaction Management
+
+* Deposit
+* Withdrawal
+* Transfer between accounts
+* Account transaction history
+* Get transaction by ID
+
+---
+
+## Banking Business Rules
+
+* Pessimistic locking (PESSIMISTIC_WRITE)
+* Concurrent transfer protection
+* Deadlock prevention
+* Balance validation
+* Active account validation
+* Atomic transactions using @Transactional
+* Global exception handling
+* DTO pattern
+* Mapper pattern
 
 ---
 
@@ -84,6 +106,14 @@ src
 │   ├── repository
 │   └── service
 │
+├── transaction
+│   ├── controller
+│   ├── dto
+│   ├── entity
+│   ├── mapper
+│   ├── repository
+│   └── service
+│
 ├── common
 │   ├── dto
 │   └── util
@@ -93,9 +123,9 @@ src
 
 ---
 
-## REST API
+## API Endpoints
 
-### Customer API
+### Customers
 
 | Method | Endpoint               |
 | ------ | ---------------------- |
@@ -105,16 +135,25 @@ src
 | PUT    | /api/v1/customers/{id} |
 | DELETE | /api/v1/customers/{id} |
 
-### Account API
+### Accounts
 
-| Method | Endpoint                               |
-| ------ | -------------------------------------- |
-| POST   | /api/v1/accounts                       |
-| GET    | /api/v1/accounts                       |
-| GET    | /api/v1/accounts/{id}                  |
-| GET    | /api/v1/accounts/customer/{customerId} |
-| GET    | /api/v1/accounts/{id}/balance          |
-| PATCH  | /api/v1/accounts/{id}/close            |
+| Method | Endpoint                       |
+| ------ | ------------------------------ |
+| POST   | /api/v1/accounts               |
+| GET    | /api/v1/accounts/{id}          |
+| GET    | /api/v1/accounts/{id}/balance  |
+| PATCH  | /api/v1/accounts/{id}/activate |
+| PATCH  | /api/v1/accounts/{id}/close    |
+
+### Transactions
+
+| Method | Endpoint                                 |
+| ------ | ---------------------------------------- |
+| POST   | /api/v1/transactions/deposit             |
+| POST   | /api/v1/transactions/withdraw            |
+| POST   | /api/v1/transactions/transfer            |
+| GET    | /api/v1/transactions/{id}                |
+| GET    | /api/v1/transactions/account/{accountId} |
 
 ---
 
@@ -122,66 +161,17 @@ src
 
 ### Unit Tests
 
-* CustomerService
 * AccountService
+* CustomerService
+* TransactionService
 
 ### Controller Tests
 
-* CustomerController
 * AccountController
+* CustomerController
+* TransactionController
 
-### Tested Scenarios
-
-* Customer CRUD
-* Account CRUD
-* Validation
-* Exception handling
-* IBAN generation
-* REST endpoints
-
----
-
-## Roadmap
-
-### Completed
-
-* Customer module
-* Account module
-* DTO mapping
-* Bean Validation
-* Global exception handling
-* Unit tests
-* Controller tests
-
-### In Progress
-
-* Transaction module
-
-### Planned
-
-* Deposit
-* Withdrawal
-* Money transfer
-* Transaction history
-* JWT Authentication
-* Role-based authorization
-* Docker & Docker Compose
-* CI/CD with GitHub Actions
-* Kafka notifications
-* Redis caching
-* Microservices architecture
-
----
-
-## Design Principles
-
-* Layered Architecture
-* SOLID Principles
-* Separation of Concerns
-* DTO Pattern
-* Repository Pattern
-* Dependency Injection
-* Exception-Driven Design
+More than **50 unit tests** covering business logic and REST controllers.
 
 ---
 
