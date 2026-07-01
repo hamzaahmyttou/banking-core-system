@@ -180,7 +180,19 @@ public class TransactionServiceImpl implements TransactionService {
         return transactionMapper.toResponse(transaction);
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public List<TransactionResponse> getAccountHistory(Long accountId) {
-        return null;
+
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() ->
+                        new AccountNotFoundException(
+                                "Account with id " + accountId + " not found"));
+
+        return transactionRepository
+                .findBySourceAccountOrDestinationAccountOrderByCreatedAtDesc(account, account)
+                .stream()
+                .map(transactionMapper::toResponse)
+                .toList();
     }
 }

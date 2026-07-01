@@ -21,4 +21,9 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             LocalDateTime start,
             LocalDateTime end
     );
+
+    List<Transaction> findBySourceAccountOrDestinationAccountOrderByCreatedAtDesc(
+            Account sourceAccount,
+            Account destinationAccount
+    );
 }
