@@ -6,6 +6,7 @@ import com.banking_core_system.banking_core_system.account.repository.AccountRep
 import com.banking_core_system.banking_core_system.exception.AccountNotFoundException;
 import com.banking_core_system.banking_core_system.exception.InsufficientFundsException;
 import com.banking_core_system.banking_core_system.exception.InvalidAccountStatusException;
+import com.banking_core_system.banking_core_system.exception.SameAccountTransferException;
 import com.banking_core_system.banking_core_system.transaction.dto.*;
 import com.banking_core_system.banking_core_system.transaction.entity.Transaction;
 import com.banking_core_system.banking_core_system.transaction.entity.TransactionType;
@@ -107,8 +108,67 @@ public class TransactionServiceImpl implements TransactionService {
         return transactionMapper.toResponse(savedTransaction);
     }
 
+    @Override
     public TransferResponse transfer(TransferRequest request) {
-        return null;
+
+        if (request.getSourceAccountId().equals(request.getDestinationAccountId())) {
+            throw new SameAccountTransferException(
+                    "Source and destination accounts must be different");
+        }
+
+        Long firstId = Math.min(
+                request.getSourceAccountId(),
+                request.getDestinationAccountId());
+
+        Long secondId = Math.max(
+                request.getSourceAccountId(),
+                request.getDestinationAccountId());
+
+        Account firstLocked = getLockedAccount(firstId);
+        Account secondLocked = getLockedAccount(secondId);
+
+        Account sourceAccount =
+                firstLocked.getId().equals(request.getSourceAccountId())
+                        ? firstLocked
+                        : secondLocked;
+
+        Account destinationAccount =
+                firstLocked.getId().equals(request.getDestinationAccountId())
+                        ? firstLocked
+                        : secondLocked;
+
+        validateActiveAccount(sourceAccount);
+        validateActiveAccount(destinationAccount);
+
+        validateSufficientBalance(sourceAccount, request.getAmount());
+
+        sourceAccount.setBalance(
+                sourceAccount.getBalance().subtract(request.getAmount()));
+
+        destinationAccount.setBalance(
+                destinationAccount.getBalance().add(request.getAmount()));
+
+        accountRepository.save(sourceAccount);
+        accountRepository.save(destinationAccount);
+
+        Transaction transaction = Transaction.builder()
+                .type(TransactionType.TRANSFER)
+                .amount(request.getAmount())
+                .sourceAccount(sourceAccount)
+                .destinationAccount(destinationAccount)
+                .description(request.getDescription())
+                .build();
+
+        Transaction savedTransaction = transactionRepository.save(transaction);
+
+        return TransferResponse.builder()
+                .transactionId(savedTransaction.getId())
+                .sourceAccountId(sourceAccount.getId())
+                .destinationAccountId(destinationAccount.getId())
+                .amount(savedTransaction.getAmount())
+                .message("Transfer completed successfully")
+                .createdAt(savedTransaction.getCreatedAt())
+                .build();
     }
 
     public TransactionResponse getTransactionById(Long id) {
