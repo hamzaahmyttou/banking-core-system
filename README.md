@@ -123,6 +123,14 @@ src
 
 ---
 
+## Run locally
+
+```bash
+docker-compose up --build
+```
+
+---
+
 ## API Endpoints
 
 ### Customers
