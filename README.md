@@ -1,5 +1,7 @@
 # Banking Core System
 
+[![CI](https://github.com/hamzaahmyttou/banking-core-system/actions/workflows/ci.yml/badge.svg)](https://github.com/hamzaahmyttou/banking-core-system/actions/workflows/ci.yml)
+
 A modern banking backend application built with Java 21 and Spring Boot 3, designed to simulate the core functionalities of a banking information system.
 
 This project follows clean architecture principles and demonstrates banking business rules, transaction management, concurrency handling, testing, and REST API best practices.
