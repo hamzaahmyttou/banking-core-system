@@ -7,6 +7,7 @@ import com.banking_core_system.banking_core_system.account.service.AccountServic
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,45 +20,44 @@ public class AccountController {
     private final AccountService accountService;
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public AccountResponse createAccount(
+    public ResponseEntity<AccountResponse> createAccount(
             @Valid @RequestBody AccountRequest request) {
 
-        return accountService.createAccount(request);
+        return new ResponseEntity<>(accountService.createAccount(request), HttpStatus.CREATED);
     }
 
     @GetMapping("/{id}")
-    public AccountResponse getAccountById(
+    public ResponseEntity<AccountResponse> getAccountById(
             @PathVariable Long id) {
 
-        return accountService.getAccountById(id);
+        return ResponseEntity.ok(accountService.getAccountById(id));
     }
 
     @GetMapping
-    public List<AccountResponse> getAllAccounts() {
+    public ResponseEntity<List<AccountResponse>> getAllAccounts() {
 
-        return accountService.getAllAccounts();
+        return ResponseEntity.ok(accountService.getAllAccounts());
     }
 
     @GetMapping("/customer/{customerId}")
-    public List<AccountResponse> getCustomerAccounts(
+    public ResponseEntity<List<AccountResponse>> getCustomerAccounts(
             @PathVariable Long customerId) {
 
-        return accountService.getCustomerAccounts(customerId);
+        return ResponseEntity.ok(accountService.getCustomerAccounts(customerId));
     }
 
     @GetMapping("/{id}/balance")
-    public BalanceResponse getBalance(
+    public ResponseEntity<BalanceResponse> getBalance(
             @PathVariable Long id) {
 
-        return accountService.getBalance(id);
+        return ResponseEntity.ok(accountService.getBalance(id));
     }
 
     @PatchMapping("/{id}/close")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void closeAccount(
+    public ResponseEntity<Void> closeAccount(
             @PathVariable Long id) {
 
         accountService.closeAccount(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }
