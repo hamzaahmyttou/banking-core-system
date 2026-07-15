@@ -6,6 +6,7 @@ import com.banking_core_system.banking_core_system.customer.service.CustomerServ
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,39 +19,39 @@ public class CustomerController {
     private final CustomerService customerService;
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public CustomerResponse createCustomer(
+    public ResponseEntity<CustomerResponse> createCustomer(
             @Valid @RequestBody CustomerRequest request) {
 
-        return customerService.createCustomer(request);
+        CustomerResponse customer = customerService.createCustomer(request);
+        return new ResponseEntity<>(customer, HttpStatus.CREATED);
     }
 
     @GetMapping("/{id}")
-    public CustomerResponse getCustomerById(
+    public ResponseEntity<CustomerResponse> getCustomerById(
             @PathVariable Long id) {
 
-        return customerService.getCustomerById(id);
+        return ResponseEntity.ok(customerService.getCustomerById(id));
     }
 
     @GetMapping
-    public List<CustomerResponse> getAllCustomers() {
+    public ResponseEntity<List<CustomerResponse>> getAllCustomers() {
 
-        return customerService.getAllCustomers();
+        return ResponseEntity.ok(customerService.getAllCustomers());
     }
 
     @PutMapping("/{id}")
-    public CustomerResponse updateCustomer(
+    public ResponseEntity<CustomerResponse> updateCustomer(
             @PathVariable Long id,
             @Valid @RequestBody CustomerRequest request) {
 
-        return customerService.updateCustomer(id, request);
+        return ResponseEntity.ok(customerService.updateCustomer(id, request));
     }
 
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteCustomer(
+    public ResponseEntity<Void> deleteCustomer(
             @PathVariable Long id) {
 
         customerService.deleteCustomer(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }
